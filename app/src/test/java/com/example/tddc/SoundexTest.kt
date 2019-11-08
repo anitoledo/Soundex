@@ -12,68 +12,41 @@ import org.junit.Assert.*
 
 class SoundexTest {
 
-    // Ask about fixtures, is this approch ok? The instantiation was duplicated in all tests so the author use a fixture
     val soundex = Soundex()
 
     @Test
-    fun retainsSoleLetterOfOneLetterWord() {
-        assertEquals("A000", soundex.encode("A"))
+    fun retainFirstLetter() {
+        assertEquals("A123", soundex.encode("Abcd"))
     }
 
     @Test
-    fun padsWithZerosToEnsureThreeDigits(){
-        assertEquals("I000", soundex.encode("I"))
+    fun dropVowelOcurrences() {
+        assertEquals("A300", soundex.encode("Aead"))
     }
 
     @Test
-    fun replacesConsonantsWithAppropriateDigits(){
-        assertEquals("A100", soundex.encode("Ab"))
-        assertEquals("A200", soundex.encode("Ac"))
-        assertEquals("A300", soundex.encode("Ad"))
-        assertEquals("A200", soundex.encode("Ax"))
+    fun replaceConsonants(){
+        assertEquals("A123", soundex.encode("Abcd"))
     }
 
     @Test
-    fun replacesMultipleConsonantsWithDigits(){
-        assertEquals("A234", soundex.encode("Acdl"))
+    fun concatenateAdjacentConsonantsSameValue(){
+        assertEquals("A123", soundex.encode("Abbcd"))
+        assertEquals("A123", soundex.encode("Abbbccdd"))
     }
 
     @Test
-    fun limitsLengthToFourCharacters(){
-        assertEquals(soundex.encode("Dcdlb").length, 4)
+    fun ifVowelRepeatConsonantValue(){
+        assertEquals("A112", soundex.encode("Abbabccdd"))
     }
 
     @Test
-    fun ignoresVowelLikeLetters(){
-        assertEquals("B234", soundex.encode("BaAeEiIoOuUhHyYcdl"))
+    fun ifHorWConcatenateConsonantValue(){
+        assertEquals("A123", soundex.encode("Abbhbccdd"))
     }
 
     @Test
-    fun combinesDuplicateEncodings(){
-        assertEquals(soundex.encodedDigit('b'), soundex.encodedDigit('f'))
-        assertEquals(soundex.encodedDigit('c'), soundex.encodedDigit('g'))
-        assertEquals(soundex.encodedDigit('d'), soundex.encodedDigit('t'))
-
-        assertEquals("A123", soundex.encode("Abfcgdt"))
-    }
-
-    @Test
-    fun uppercasesFirstLetter(){
-        assertEquals(true, soundex.encode("abcd").startsWith("A"))
-    }
-
-    @Test
-    fun ignoresCaseWhenEncodingConsonants(){
-        assertEquals(soundex.encode("BCDL"), soundex.encode("Bcdl"))
-    }
-
-    @Test
-    fun combinesDuplicateCodesWhen2ndLetterDuplicates1st(){
-        assertEquals("B230", soundex.encode("Bbcd"))
-    }
-
-    @Test
-    fun doesNotCombineDuplicateEncodingsSeparatedByVowels(){
-        assertEquals("J110", soundex.encode("Jbob"))
+    fun trimWhenFourDigitEncode(){
+        assertEquals("A300", soundex.encode("Aead"))
     }
 }

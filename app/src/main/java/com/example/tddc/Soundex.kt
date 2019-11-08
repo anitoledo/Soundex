@@ -1,102 +1,62 @@
 package com.example.tddc
 
-private const val maxCodeLength = 4
-private const val notADigit = "*"
+private const val TAIL_MAX_LENGTH = 3
 
-class Soundex(){
-
+class Soundex {
     fun encode(word: String): String {
-        return zeroPad(upperFront(head(word)) + tail(encodedDigits(word)))
+        return "${getFirstLetter(word).toUpperCase()}${completeDigit(replaceConsonants(word))}"
     }
 
-    private fun head(word: String): String {
-        return word.substring(0, 1)
-    }
-
-    private fun upperFront(word: String): String {
-        return word.first().toString().toUpperCase()
+    private fun getFirstLetter(word: String): Char {
+        return word.first()
     }
 
     private fun tail(word: String): String {
         return word.substring(1)
     }
 
-    private fun encodedDigits(word: String): String {
-        var encoding = encodeHead(word)
-        encoding = encodeTail(encoding, word)
-        return encoding
-    }
-
-    private fun encodeHead(word: String): String {
-        return encodedDigit(word.first())
-    }
-
-    private fun encodeTail(encoding: String, word: String): String {
-        var temp = encoding
+    private fun replaceConsonants(word: String): String {
+        var temp = ""
         val tail = tail(word)
+        var lastWordValue = encodeLetter(word[0], "")
         tail.forEachIndexed { i, letter ->
-            if(!isComplete(temp)) {
-                temp += encodeLetter(temp, letter, word[i])
+            if(!isCompleted(temp)) {
+                lastWordValue = encodeLetter(word[i], lastWordValue)
+                val currentWordValue = encodeLetter(letter, lastWordValue)
+                temp += if (repeatedValue(lastWordValue, currentWordValue)) "" else currentWordValue
             }
-
         }
         return temp
     }
 
-    private fun encodeLetter(encoding: String, letter: Char, lastLetter: Char): String {
-        val digit = encodedDigit(letter)
-        if (digit != notADigit && (digit != lastDigit(encoding) || isVowel(lastLetter))){
-            return encodedDigit(letter)
+    private fun encodeLetter(letter: Char, lastWordValue: String): String {
+        return when(letter.toLowerCase()){
+            'b', 'f', 'p', 'v' -> "1"
+            'c', 'g', 'j', 'k', 'q', 's', 'x', 'z' -> "2"
+            'd', 't' -> "3"
+            'l' -> "4"
+            'm', 'n' -> "5"
+            'r' -> "6"
+            'h', 'w' -> lastWordValue
+            else -> ""
         }
-        return ""
     }
 
-    private fun isVowel(letter: Char): Boolean {
-        val vowels = listOf('a', 'e', 'i', 'o', 'u', 'y')
-        return vowels.contains(letter)
+    private fun repeatedValue(lastWordValue: String, currentWordValue: String): Boolean{
+        return lastWordValue == currentWordValue
     }
 
-    private fun lastDigit(encoding: String): String {
-        if(encoding.isEmpty()) return ""
-        return encoding.last().toString()
+    private fun isCompleted(tail: String): Boolean{
+        return tail.length >= TAIL_MAX_LENGTH
     }
 
-    private fun isComplete(encoding: String): Boolean {
-        return encoding.length == maxCodeLength
-    }
-
-    fun encodedDigit(letter: Char): String {
-        val encodings = mapOf(
-            'b' to "1",
-            'c' to "2",
-            'd' to "3",
-            'l' to "4",
-            'm' to "5",
-            'r' to "6",
-            'f' to "1",
-            'g' to "2",
-            's' to "2",
-            't' to "3",
-            'n' to "5",
-            'p' to "1",
-            'j' to "2",
-            'x' to "2",
-            'v' to "1",
-            'k' to "2",
-            'z' to "2",
-            'q' to "2"
-        )
-
-        val it = encodings[lower(letter)].orEmpty()
-        return if(it.isEmpty()) notADigit else it
-    }
-
-    private fun lower(c: Char): Char {
-        return c.toLowerCase()
-    }
-
-    private fun zeroPad(word: String): String {
-        val zerosNeeded = maxCodeLength - word.length
-        return "$word${IntArray(zerosNeeded, {0}).joinToString("")}"
+    private fun completeDigit(tail: String): String{
+        var temp = tail
+        if (!isCompleted(tail)) {
+            for(i in tail.length until TAIL_MAX_LENGTH) {
+                temp += "0"
+            }
+        }
+        return temp
     }
 }
